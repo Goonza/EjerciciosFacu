@@ -32,7 +32,7 @@ int main()
     t_registro registro;
     int cant_dat, i;
     crearlista(&lista);
-    pf=fopen("Impuesto","r+b");
+    pf=fopen("Impuesto.dat","r+b");
 
     mostrar(pf);
 
