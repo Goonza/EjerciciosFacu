@@ -1,0 +1,139 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct{
+char codigo;
+int pago;}t_registro;
+
+typedef struct{
+int clave;
+int cant;
+}t_dato;
+
+typedef struct s_nodo{
+t_dato dato;
+struct s_nodo *sig;}t_nodo;
+
+typedef t_nodo * t_lista;
+
+void crearlista(t_lista *);
+int insertarEnOrden(t_lista *, t_dato *);
+int comparar(t_dato *, t_dato *);
+void mostrarlista(t_lista *);
+void mostrar(FILE *);
+void actualizar(t_lista *,FILE *);
+void eliminarnodo(t_lista *);
+
+int main()
+{
+    FILE *pf;
+    t_lista lista;
+    t_dato dato;
+    t_registro registro;
+    int cant_dat, i;
+    crearlista(&lista);
+    pf=fopen("Impuesto","r+b");
+
+    mostrar(pf);
+
+    printf("Cuantos datos quiere ingresar en la lista?:");
+    scanf("%d",&cant_dat);
+    for(i=0;i<cant_dat;i++)
+    {
+        printf("\nIngrese la clave:");
+        scanf("%d",&dato.clave);
+        printf("Ingrese la cantidad:");
+        scanf("%d",&dato.cant);
+        insertarEnOrden(&lista,&dato);
+    }
+    mostrarlista(&lista);
+    printf("\n\n Actualizando el archivo..");
+    actualizar(&lista,pf);
+
+    mostrar(pf);
+}
+
+void actualizar (t_lista *p, FILE *pf)
+{
+    t_registro registro;
+    while(*p)
+    {
+        while((*p)->sig && (*p)->dato.clave == (*p)->sig->dato.clave)
+        {
+            (*p)->sig->dato.cant += (*p)->dato.cant;
+            eliminarnodo(p);
+        }
+        fseek(pf,sizeof(t_registro)*((*p)->dato.clave-1),0);
+        fread(&registro,sizeof(t_registro),1,pf);
+        registro.pago += (*p)->dato.cant;
+        fseek(pf,(-1L)*sizeof(t_registro),1);
+        fseek(pf,0,1);
+        fwrite(&registro,sizeof(t_registro),1,pf);
+        eliminarnodo(p);
+    }
+
+
+}
+
+void eliminarnodo(t_lista *p)
+{
+    t_nodo *aux;
+    aux = *p;
+    *p = aux->sig;
+    free(aux);
+}
+
+void crearlista(t_lista *p)
+{
+    *p = NULL;
+}
+
+int insertarEnOrden(t_lista *p, t_dato *d)
+{
+    t_nodo *nue;
+    while(*p && comparar(d,&(*p)->dato)>0)
+        p=&(*p)->sig;
+    nue=(t_nodo *)malloc(sizeof(t_nodo));
+    if(!nue)
+        return 0;
+    nue->dato=*d;
+    nue->sig=*p;
+    *p=nue;
+    return 1;
+}
+
+int comparar(t_dato *d1, t_dato *d2)
+{
+    if(d1->clave > d2->clave)
+        return 1;
+    else
+        if(d1->clave == d2->clave)
+            return 0;
+        else
+            return -1;
+}
+
+void mostrarlista(t_lista *p)
+{
+    printf("\nClave\tCantidad");
+    while(*p)
+    {
+        printf("\n\n%d \t %d",(*p)->dato.clave,(*p)->dato.cant);
+        p=&(*p)->sig;
+    }
+}
+
+
+void mostrar(FILE *pf)
+{
+    t_registro registro;
+    fseek(pf,0,0);
+    fread(&registro,sizeof(t_registro),1,pf);
+    printf("\n\nCodigo \t Pago\n");
+    while(!feof(pf))
+    {
+        printf("%c \t %d\n",registro.codigo,registro.pago);
+        fread(&registro,sizeof(t_registro),1,pf);
+    }
+
+}
