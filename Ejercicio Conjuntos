@@ -1,0 +1,183 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#define TAM 30
+
+typedef struct {
+int clave;
+char nombre[TAM];
+int stock;}t_registro;
+
+typedef struct{
+int clave;
+int stock;}t_dato;
+
+typedef struct s_nodo{
+t_dato dato;
+struct s_nodo *sig;}t_nodo;
+
+typedef t_nodo *t_pila;
+
+typedef t_nodo *t_lista;
+
+typedef struct{
+t_nodo *pri;
+t_nodo *ult;}t_cola;
+
+void crearlista(t_lista *);
+void crearcola(t_cola *);
+void crearpila(t_pila *);
+
+int dif_A_B(t_registro *, t_cola *);
+int dif_B_A(t_registro *, t_pila *);
+void union2(t_registro *, FILE *);
+int interseccion(t_registro *, t_lista *);
+
+
+
+
+int main()
+{
+    FILE *pfa, *pfb, *pfc;
+    t_lista lista;
+    t_pila pila;
+    t_cola cola;
+    t_registro registroa, registrob;
+    pfa=fopen("Archivo1.dat","r+b");
+    pfb=fopen("Archivo2.dat","r+b");
+    pfc=fopen("Archivo3.dat","w+b");
+    if(!pfa)
+    {
+        printf("ERROR");
+        getch();
+        exit(1);
+    }
+    if(!pfb)
+    {
+        printf("ERROR");
+        getch();
+        fclose(pfa);
+        exit(1);
+    }
+
+    fread(&registroa,sizeof(t_registro),1,pfa);
+    fread(&registrob,sizeof(t_registro),1,pfb);
+
+    crearlista(&lista);
+    crearpila(&pila);
+    crearcola(&cola);
+
+    while(!feof(pfa) && !feof(pfb))
+    {
+        if(registroa.clave == registrob.clave)
+            {union2(&registroa,pfc);
+            interseccion(&registroa,&lista);
+            fread(&registroa,sizeof(t_registro),1,pfa); //MUEVO LOS DOS PUNTEROS
+            fread(&registrob,sizeof(t_registro),1,pfb);
+            }
+        else
+        {
+            if(registroa.clave > registrob.clave)
+            {
+                union2(&registrob,pfc);
+                dif_B_A(&registrob,&pila);
+                fread(&registrob,sizeof(t_registro),1,pfb);
+            }
+            else
+            {
+                union2(&registroa,pfc);
+                dif_A_B(&registroa,&cola);
+                fread(&registroa,sizeof(t_registro),1,pfa);
+            }
+    }
+
+    if(!feof(pfa))
+    {
+        while(!pfa)
+        {
+        union2(&registroa,pfc);
+        dif_A_B(&registroa,&cola);
+        fread(&registroa,sizeof(t_registro),1,pfa);
+        }
+
+    }
+    if(!feof(pfb))
+    {
+        while(!pfb)
+        {
+        union2(&registrob,pfc);
+        dif_B_A(&registrob,&pila);
+        fread(&registrob,sizeof(t_registro),1,pfb);
+        }
+    }
+    }
+    fclose(pfa);
+    fclose(pfb);
+    fclose(pfc);
+    return 0;
+}
+
+int dif_A_B(t_registro *registro, t_cola *p)
+{
+    t_nodo *nue;
+    nue=(t_nodo *)malloc(sizeof(t_nodo));
+    if(!nue)
+        return 0;
+    nue->dato.clave=registro->clave;
+    nue->sig=NULL;
+    if(p->pri==NULL)
+        p->pri=nue;
+    else
+        p->ult->sig=nue;
+    p->ult=nue;
+    return 1;
+
+}
+
+int dif_B_A(t_registro *registro, t_pila *p)
+{
+    t_nodo *nue;
+    nue=(t_nodo *)malloc(sizeof(t_nodo));
+    if(!nue)
+        return 0;
+    nue->dato.clave=registro->clave;
+    nue->sig=*p;
+    *p=nue;
+    return 1;
+
+}
+
+void crearcola(t_cola *p)
+{
+    p->pri=p->ult=NULL;
+}
+
+void crearpila(t_pila *p)
+{
+    *p=NULL;
+}
+
+void crearlista(t_lista *p)
+{
+    *p=NULL;
+}
+
+void union2(t_registro *registro, FILE *pfc)
+{
+    fwrite(registro,sizeof(t_registro),1,pfc);
+}
+
+int interseccion(t_registro *registro, t_lista *p)
+{
+    t_nodo *nue;
+    nue=(t_nodo *)malloc(sizeof(t_nodo));
+    if(!nue)
+        return 0;
+    while(*p)
+        p=&(*p)->sig;
+    nue->dato.clave=registro->clave;
+    nue->sig=*p;
+    *p=nue;
+    return 1;
+}
+
