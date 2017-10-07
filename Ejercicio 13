@@ -15,7 +15,7 @@ typedef struct
     char nomb[TAM2];
     char ape[TAM2];
     int dni;
-    float saldo;
+    float saldo; //el sueldo es double
    }t_empleado;
 
 int actualiza (t_estudiante *, t_empleado *);
@@ -23,7 +23,7 @@ int actualiza (t_estudiante *, t_empleado *);
 int main()
 {
     FILE *pfest, *pfemp;
-    int result;
+    int result; //la declaraste y nunca la usas
     t_estudiante estudiante;
     t_empleado empleado;
     pfemp=fopen("empleado.dat","r+b");
@@ -45,18 +45,25 @@ int main()
                 printf("Empleado no coincide con estudiante\n");
             else
                 printf("El saldo actualizado es %f\n",empleado.saldo);
-            fseek(pfemp,-1L*sizeof(t_empleado),1);
-            fwrite(&empleado,sizeof(t_empleado),1,pfemp);
+            fseek(pfemp,-1L*sizeof(t_empleado),1); 
+            fwrite(&empleado,sizeof(t_empleado),1,pfemp); //regrabas sea o no actualizado
             fseek(pfemp,0L,1);
 
         }
+        /*aca estas leyendo a ambos archivos juntos. Si el alumno de la primera posicion estaba en la tercera del
+        archivo de empleados nunca lo vas a saber porque solo leiste el primero y seguiste con ambos archivos a la par*/
         fread(&estudiante,sizeof(t_estudiante),1,pfest);
         fread(&empleado,sizeof(t_empleado),1,pfemp);
     }
+    
+    //no cerras los archivos
 
 }
 
-int actualiza (t_estudiante *estudiante, t_empleado *empleado)
+/*te fijas solo si justo ese alumno milagrosamente era el empleado :P
+El archivo esta ordenado por apellido desp por nombre y a lo ultimo el dni*/
+
+int actualiza (t_estudiante *estudiante, t_empleado *empleado) 
 {
     if(estudiante->dni != empleado->dni)
         return 0;
